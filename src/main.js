@@ -1,17 +1,32 @@
 import Vue from 'vue'
 import App from './App.vue'
 import vuetify from './plugins/vuetify'
-import router from './router'
+import VueRouter from 'vue-router'
+
+import Home from './views/Home.vue'
+import Task from './views/Tasks.vue'
 
 Vue.config.productionTip = false
+Vue.use(VueRouter)
 
-var taskData = {}
+const routes = [
+  {
+    path: '/',
+    name: 'Home',
+    component: Home,
+  },
+  { 
+    path: "/task/:id", 
+    name: 'Task', 
+    component: Task 
+  }
+]
 
-if (!localStorage.getItem("taskData")) {
-  localStorage.setItem("taskData", taskData)
-} else {
-  taskData = localStorage.getItem("taskData")
-}
+const router = new VueRouter({
+  mode: 'history',
+  base: process.env.BASE_URL,
+  routes
+})
 
 new Vue({
   vuetify,
