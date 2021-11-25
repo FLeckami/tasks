@@ -4,29 +4,32 @@
         <v-list-item-group
         v-model="selected"
         >
-          <template v-for="(list, idx) in taskData">
+          <template v-for="(list, idx1, idx2) in taskData">
             <v-list-item
-            :key="idx"
-            @mouseenter="hovered = idx"
+            :key="idx1"
+            @mouseenter="hovered = idx1"
             @mouseleave="hovered = null"
-            @click="goToTaskList(idx)"
+            @click="goToTaskList(index)"
             >
               <v-list-item-content>
                 <v-list-item-title v-text="list.name"></v-list-item-title>
               </v-list-item-content>
-              <v-list-item-action v-if="hovered == idx">
-                <v-btn icon @click.stop="renameTaskList(idx)">
+
+              <v-list-item-action v-if="hovered == idx1">
+                <v-btn icon @click.stop="renameTaskList(idx1)">
                   <v-icon>mdi-pencil</v-icon>
                 </v-btn>
               </v-list-item-action>
-              <v-list-item-action v-if="hovered == idx">
-                <v-btn icon @click.stop="deleteTaskList(idx)">
+
+              <v-list-item-action v-if="hovered == idx1">
+                <v-btn icon @click.stop="deleteTaskList(idx1)">
                   <v-icon>mdi-delete</v-icon>
                 </v-btn>
               </v-list-item-action>
+
             </v-list-item>
 
-            <v-divider :key="idx" v-if="idx < taskData.length-1"></v-divider>
+            <v-divider :key="idx2" v-if="idx1 < taskData.length-1"></v-divider>
           </template>
         </v-list-item-group>
       </v-list>
@@ -83,10 +86,10 @@
 <script>
 // @ is an alias to /src
 
-var taskData = [{name: "liste"}]
+var taskData = []
 
 if (!localStorage.getItem("taskData")) {
-  localStorage.setItem("taskData", taskData)
+  localStorage.setItem("taskData", JSON.stringify(taskData))
 } else {
   taskData = JSON.parse(localStorage.getItem("taskData"))
 }
@@ -103,12 +106,9 @@ export default {
     }
   },
   methods: {
-    display: function(txt) {
-      console.log(txt)
-    },
     addTaskList: function (name) {
       if (name != '') {
-        this.taskData.push({name})
+        this.taskData.push({name, tasks: []})
         localStorage.setItem("taskData", JSON.stringify(this.taskData))
       }
       this.taskListName = ''
