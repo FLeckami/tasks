@@ -9,7 +9,7 @@
             :key="idx1"
             @mouseenter="hovered = idx1"
             @mouseleave="hovered = null"
-            @click="goToTaskList(index)"
+            @click="goToTaskList(idx1)"
             >
               <v-list-item-content>
                 <v-list-item-title v-text="list.name"></v-list-item-title>
@@ -105,11 +105,16 @@ export default {
       hovered: null,
     }
   },
+
+  watch: {
+    taskData: function(newList) {
+      localStorage.setItem("taskData", JSON.stringify(newList))
+    }
+  },
   methods: {
     addTaskList: function (name) {
       if (name != '') {
         this.taskData.push({name, tasks: []})
-        localStorage.setItem("taskData", JSON.stringify(this.taskData))
       }
       this.taskListName = ''
     },
@@ -118,14 +123,13 @@ export default {
         let name = prompt("Nouveau nom de la liste (laissez vide pour annuler) :")
         if (name != '' && name != null) {
           this.taskData[idx].name = name
-          localStorage.setItem("taskData", JSON.stringify(this.taskData))
+          localStorage.setItem("taskData", JSON.stringify(taskData))
         }
       }
     },
     deleteTaskList: function(idx) {
       if (idx != null && confirm("Voulez-vous vraiment supprimer cette liste et tout ce qu'il contient ?")) {     
         this.taskData.splice(idx, 1)
-        localStorage.setItem("taskData", JSON.stringify(taskData))
       }
     },
     goToTaskList: function (idx) {
