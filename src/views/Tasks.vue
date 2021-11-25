@@ -4,25 +4,36 @@
         <v-list-item-group
         v-model="selected"
         >
-          <template v-for="(list, idx1, idx2) in taskData[listIdx].tasks">
+          <template v-for="(list, idx1, idx2) in taskData">
             <v-list-item
             :key="idx1"
             @mouseenter="hovered = idx1"
             @mouseleave="hovered = null"
             >
-              <v-list-item-content>
-                <v-list-item-title v-text="list.name"></v-list-item-title>
-              </v-list-item-content>
-              <v-list-item-action v-if="hovered == idx1">
-                <v-btn icon @click.stop="renameTask(idx1)">
-                  <v-icon>mdi-pencil</v-icon>
-                </v-btn>
-              </v-list-item-action>
-              <v-list-item-action v-if="hovered == idx1">
-                <v-btn icon @click.stop="deleteTask(idx1)">
-                  <v-icon>mdi-delete</v-icon>
-                </v-btn>
-              </v-list-item-action>
+                <v-list-item-action>
+                    <v-checkbox
+                    v-model="taskData[idx1].isCompleted"
+                    @click="saveTaskList(taskData)"
+                    >
+                    </v-checkbox>
+                </v-list-item-action>
+
+                <v-list-item-content>
+                    <v-list-item-title v-text="list.name"></v-list-item-title>
+                </v-list-item-content>
+
+                <v-list-item-action v-if="hovered == idx1">
+                    <v-btn icon @click.stop="renameTask(idx1)">
+                        <v-icon>mdi-pencil</v-icon>
+                    </v-btn>
+                </v-list-item-action>
+
+                <v-list-item-action v-if="hovered == idx1">
+                    <v-btn icon @click.stop="deleteTask(idx1)">
+                        <v-icon>mdi-delete</v-icon>
+                    </v-btn>
+                </v-list-item-action>
+
             </v-list-item>
 
             <v-divider :key="idx2" v-if="idx1 < taskData.length-1"></v-divider>
@@ -81,40 +92,38 @@
 
 
 <script>
-let taskData = JSON.parse(localStorage.getItem("taskData"))
+
 
 export default {
     name: 'Task',
 
     data: function() { 
         return {
-            taskData,
+            taskData: [],
             newTaskDialog: false,
             taskName: '',
             hovered: null,
             selected: null,
-            listIdx: null
 
         }
     },
 
+    watch: {
+        taskData: 'saveTaskList'
+    },
 
     created: function() {
-        let self = this
-        this.listIdx = this.$route.params.id
-
-        this.$watch(function () {return self.taskData[self.listIdx].tasks},
-        function (newList) {
-            self.taskData[self.listIdx].tasks = newList
-            localStorage.setItem("taskData", JSON.stringify(self.taskData))
-        })
+        let taskListData = JSON.parse(localStorage.getItem("taskData"))
+        this.taskData = taskListData[this.$route.params.id].tasks
+        console.log(this.taskData)
     },
 
     methods: {
         addTask: function(name) {
             if (name != '') {
-                this.taskData[this.listIdx].tasks.push({
-                    name
+                this.taskData.push({
+                    name,
+                    isCompleted: false
                 })
             }
         },
@@ -123,8 +132,14 @@ export default {
         },
         deleteTask: function(idx) {
             if (idx != null && confirm("Voulez-vous vraiment supprimer cette tâche ?")) {
-                this.taskData[this.listIdx].tasks.splice(idx, 1)
+                this.taskData.splice(idx, 1)
             }
+        },
+
+        saveTaskList: function(newList) {
+            let taskListData = JSON.parse(localStorage.getItem("taskData"))
+            taskListData[this.$route.params.id].tasks = newList
+            localStorage.setItem("taskData", JSON.stringify(taskListData))
         }
     }
     
