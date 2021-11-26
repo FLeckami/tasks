@@ -24,8 +24,8 @@
           width="100"
         />
       </div>
-      <v-spacer></v-spacer>
-      <v-text>Gestion de tâche</v-text>
+
+      <v-app-bar-title>Gestion de tâche</v-app-bar-title>
 
     </v-app-bar>
 
