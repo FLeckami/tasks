@@ -13,18 +13,31 @@
             >
               <v-list-item-content>
                 <v-list-item-title v-text="list.name"></v-list-item-title>
+                <v-list-item-subtitle>
+                  {{nbCompletedTask(list)}} tâche{{nbCompletedTask(list) != 1 ? "s" : ""}} complétée{{nbCompletedTask(list) != 1 ? "s" : ""}} sur {{list.tasks.length}} ({{percent(list)}} %)
+                </v-list-item-subtitle>
               </v-list-item-content>
 
               <v-list-item-action v-if="hovered == idx1">
-                <v-btn icon @click.stop="renameTaskList(idx1)">
-                  <v-icon>mdi-pencil</v-icon>
-                </v-btn>
+                <v-tooltip top>
+                  <template #activator="{on, attrs}">
+                      <v-btn icon v-on="on" v-bind="attrs" @click.stop="renameTaskList(idx1)">
+                          <v-icon>mdi-pencil</v-icon>
+                      </v-btn>
+                  </template>
+                  Renommer
+                </v-tooltip>
               </v-list-item-action>
 
               <v-list-item-action v-if="hovered == idx1">
-                <v-btn icon @click.stop="deleteTaskList(idx1)">
-                  <v-icon>mdi-delete</v-icon>
-                </v-btn>
+                <v-tooltip top>
+                  <template #activator="{on, attrs}">
+                      <v-btn icon v-on="on" v-bind="attrs" @click.stop="deleteTaskList(idx1)">
+                          <v-icon>mdi-delete</v-icon>
+                      </v-btn>
+                  </template>
+                  Supprimer
+                </v-tooltip>
               </v-list-item-action>
 
             </v-list-item>
@@ -106,12 +119,28 @@ export default {
     }
   },
 
+
   watch: {
     taskData: function(newList) {
       localStorage.setItem("taskData", JSON.stringify(newList))
     }
   },
+
   methods: {
+
+    nbCompletedTask: function(list) {
+      let res = 0
+      list.tasks.forEach((item) => {
+        if (item.isCompleted) {res++}
+      })
+      return res
+    },
+    percent: function(list) {
+      let ratio = this.nbCompletedTask(list) / list.tasks.length
+      if (isNaN(ratio)) {return 0}
+      else {return Math.round(ratio*100)}
+    },
+
     addTaskList: function (name) {
       if (name != '') {
         this.taskData.push({name, tasks: []})
