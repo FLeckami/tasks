@@ -20,7 +20,7 @@
           >
             <v-list-item-action>
               <v-checkbox
-                v-model="taskData.tasks[idx1].isCompleted"
+                v-model="list.isCompleted"
                 @click="saveTaskList(taskData.tasks)"
               >
               </v-checkbox>
@@ -195,6 +195,7 @@ export default {
         contexts: [],
         tags: {},
         isCompleted: false,
+        completionDate: new Date(),
       },
       hovered: null,
       selected: null,
@@ -239,6 +240,9 @@ export default {
     },
 
     saveTaskList: function (newList) {
+      newList.forEach((elmt) => {
+        if (elmt.isCompleted) elmt.completionDate = new Date();
+      });
       let taskListData = JSON.parse(localStorage.getItem("taskData"));
       taskListData[this.$route.params.id].tasks = newList;
       localStorage.setItem("taskData", JSON.stringify(taskListData));
@@ -255,6 +259,7 @@ export default {
         categories: [],
         contexts: [],
         tags: {},
+        completionDate: new Date(),
         isCompleted: false,
       });
     },
