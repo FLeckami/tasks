@@ -27,6 +27,22 @@
                     icon
                     v-on="on"
                     v-bind="attrs"
+                    @click.stop="exportTaskList(idx1)"
+                  >
+                    <v-icon>mdi-export-variant</v-icon>
+                  </v-btn>
+                </template>
+                Exporter
+              </v-tooltip>
+            </v-list-item-action>
+
+            <v-list-item-action v-if="hovered == idx1">
+              <v-tooltip top>
+                <template #activator="{ on, attrs }">
+                  <v-btn
+                    icon
+                    v-on="on"
+                    v-bind="attrs"
                     @click.stop="renameTaskList(idx1)"
                   >
                     <v-icon>mdi-pencil</v-icon>
@@ -264,7 +280,7 @@ export default {
               contexts: [],
               tags: {},
               isCompleted: false,
-              completionDate: new Date(),
+              completionDate: new Date().toLocaleDateString("fr-FR"),
             };
 
             console.log("todoPtrn: ", task.match(todoPatterns.task))
@@ -281,6 +297,7 @@ export default {
             taskProperty.completionDate = task.match(
               todoPatterns.completion
             )?.groups.date;
+            taskProperty.completionDate = new Date(taskProperty.completionDate).toLocaleDateString("fr-FR")
 
             taskList.push(taskProperty);
           });
@@ -291,6 +308,31 @@ export default {
           });
         });
       }
+    },
+
+    exportTaskList: function(idx) {
+      let text = ""
+      let taskList = this.taskData[idx]
+      let datePtrn = /(?<j>\d{2})\/(?<m>\d{2})\/(?<a>\d{4})/
+
+      taskList.tasks.forEach(function(task) {
+        text += (task.isCompleted) ? ("x "+ task.completionDate.replace(datePtrn, "$<a>-$<m>-$<j>") + " ") : ""
+        text += (task.priority != "") ? ("(" + task.priority + ") ") : ""
+        text += task.name + " "
+        text += (task.categories.length != 0) ? "+" + task.categories.join(" +") + " " : ""
+        text += (task.contexts.length != 0) ? "@" + task.contexts.join(" @") + " " : ""
+        text += "\n"
+      })
+
+      let link = document.createElement('a')
+
+      link.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(text))
+      link.setAttribute('download', taskList.name + "_todo.txt")
+      link.style.display = 'none'
+
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
     },
 
     goToTaskList: function (idx) {

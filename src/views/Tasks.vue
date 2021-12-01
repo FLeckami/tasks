@@ -195,7 +195,7 @@ export default {
         contexts: [],
         tags: {},
         isCompleted: false,
-        completionDate: new Date(),
+        completionDate: new Date().toLocaleDateString("fr-FR"),
       },
       hovered: null,
       selected: null,
@@ -240,10 +240,12 @@ export default {
     },
 
     saveTaskList: function (newList) {
-      newList.forEach((elmt) => {
-        if (elmt.isCompleted) elmt.completionDate = new Date();
-      });
+      
       let taskListData = JSON.parse(localStorage.getItem("taskData"));
+      newList.forEach((elmt, idx) => {
+        if (elmt.isCompleted && !taskListData[this.$route.params.id].tasks[idx].isCompleted) elmt.completionDate = new Date().toLocaleDateString("fr-FR");
+      });
+
       taskListData[this.$route.params.id].tasks = newList;
       localStorage.setItem("taskData", JSON.stringify(taskListData));
     },
@@ -259,7 +261,7 @@ export default {
         categories: [],
         contexts: [],
         tags: {},
-        completionDate: new Date(),
+        completionDate: new Date().toLocaleDateString("fr-FR"),
         isCompleted: false,
       });
     },
