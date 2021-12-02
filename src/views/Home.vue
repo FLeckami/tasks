@@ -43,7 +43,11 @@
                     icon
                     v-on="on"
                     v-bind="attrs"
-                    @click.stop="renameTaskList(idx1)"
+                    @click.stop="
+                      selected = idx1;
+                      taskListName = list.name
+                      renameTaskListDialog = true;
+                    "
                   >
                     <v-icon>mdi-pencil</v-icon>
                   </v-btn>
@@ -104,11 +108,12 @@
         </v-list-item-group>
       </v-list>
     </v-menu>
-    <v-dialog v-model="addOrImportTaskListDialog">
+    <v-dialog v-model="addOrImportOrRenameTaskListDialog">
       <v-card>
         <v-card-title>
           <h3 v-if="newTaskListDialog">Nouvelle liste de tâche</h3>
-          <h3 v-else>Importer une liste de tâche</h3>
+          <h3 v-else-if="importTaskListDialog">Importer une liste de tâche</h3>
+          <h3 v-else>Renommer la liste de tâche</h3>
         </v-card-title>
         <v-card-text>
           <v-container>
@@ -137,6 +142,7 @@
             @click="
               newTaskListDialog = false;
               importTaskListDialog = false;
+              renameTaskListDialog = false;
             "
           >
             Annuler
@@ -153,7 +159,7 @@
             Créer
           </v-btn>
           <v-btn
-            v-else
+            v-else-if="importTaskListDialog"
             color="blue darken-1"
             text
             @click="
@@ -162,6 +168,17 @@
             "
           >
             Importer
+          </v-btn>
+          <v-btn
+            v-else
+            color="blue darken-1"
+            text
+            @click="
+              renameTaskList(selected, taskListName);
+              renameTaskListDialog = false;
+            "
+          >
+            Renommer
           </v-btn>
         </v-card-actions>
       </v-card>
@@ -188,6 +205,7 @@ export default {
       importedFile: null,
       newTaskListDialog: false,
       importTaskListDialog: false,
+      renameTaskListDialog: false,
       taskListName: "",
       selected: null,
       hovered: null,
@@ -201,8 +219,12 @@ export default {
   },
 
   computed: {
-    addOrImportTaskListDialog: function () {
-      return this.newTaskListDialog || this.importTaskListDialog;
+    addOrImportOrRenameTaskListDialog: function () {
+      return (
+        this.newTaskListDialog ||
+        this.importTaskListDialog ||
+        this.renameTaskListDialog
+      );
     },
   },
 
@@ -231,15 +253,10 @@ export default {
       }
       this.taskListName = "";
     },
-    renameTaskList: function (idx) {
-      if (idx != null) {
-        let name = prompt(
-          "Nouveau nom de la liste (laissez vide pour annuler) :"
-        );
-        if (name != "" && name != null) {
-          this.taskData[idx].name = name;
-          localStorage.setItem("taskData", JSON.stringify(taskData));
-        }
+    renameTaskList: function (idx, name) {
+      if (name != "" && name != null) {
+        this.taskData[idx].name = name;
+        localStorage.setItem("taskData", JSON.stringify(taskData));
       }
     },
     deleteTaskList: function (idx) {
@@ -269,9 +286,9 @@ export default {
 
         this.importedFile.text().then(function (txt) {
           listText = txt.split("\n");
-          console.log("listText: ", listText)
+          console.log("listText: ", listText);
           listText.forEach(function (task) {
-            if (task == "") return
+            if (task == "") return;
 
             let taskProperty = {
               name: "",
@@ -283,21 +300,21 @@ export default {
               completionDate: new Date().toLocaleDateString("fr-FR"),
             };
 
-            console.log("todoPtrn: ", task.match(todoPatterns.task))
+            console.log("todoPtrn: ", task.match(todoPatterns.task));
 
             taskProperty.name = task.match(todoPatterns.task).groups.text;
             taskProperty.priority =
               task.match(todoPatterns.priority)?.groups.imp ?? "";
-            taskProperty.categories =
-              task.match(todoPatterns.category) ?? [];
-            taskProperty.contexts =
-              task.match(todoPatterns.context) ?? [];
+            taskProperty.categories = task.match(todoPatterns.category) ?? [];
+            taskProperty.contexts = task.match(todoPatterns.context) ?? [];
             taskProperty.isCompleted =
               task.match(todoPatterns.completion) != null;
             taskProperty.completionDate = task.match(
               todoPatterns.completion
             )?.groups.date;
-            taskProperty.completionDate = new Date(taskProperty.completionDate).toLocaleDateString("fr-FR")
+            taskProperty.completionDate = new Date(
+              taskProperty.completionDate
+            ).toLocaleDateString("fr-FR");
 
             taskList.push(taskProperty);
           });
@@ -310,29 +327,38 @@ export default {
       }
     },
 
-    exportTaskList: function(idx) {
-      let text = ""
-      let taskList = this.taskData[idx]
-      let datePtrn = /(?<j>\d{2})\/(?<m>\d{2})\/(?<a>\d{4})/
+    exportTaskList: function (idx) {
+      let text = "";
+      let taskList = this.taskData[idx];
+      let datePtrn = /(?<j>\d{2})\/(?<m>\d{2})\/(?<a>\d{4})/;
 
-      taskList.tasks.forEach(function(task) {
-        text += (task.isCompleted) ? ("x "+ task.completionDate.replace(datePtrn, "$<a>-$<m>-$<j>") + " ") : ""
-        text += (task.priority != "") ? ("(" + task.priority + ") ") : ""
-        text += task.name + " "
-        text += (task.categories.length != 0) ? "+" + task.categories.join(" +") + " " : ""
-        text += (task.contexts.length != 0) ? "@" + task.contexts.join(" @") + " " : ""
-        text += "\n"
-      })
+      taskList.tasks.forEach(function (task) {
+        text += task.isCompleted
+          ? "x " + task.completionDate.replace(datePtrn, "$<a>-$<m>-$<j>") + " "
+          : "";
+        text += task.priority != "" ? "(" + task.priority + ") " : "";
+        text += task.name + " ";
+        text +=
+          task.categories.length != 0
+            ? "+" + task.categories.join(" +") + " "
+            : "";
+        text +=
+          task.contexts.length != 0 ? "@" + task.contexts.join(" @") + " " : "";
+        text += "\n";
+      });
 
-      let link = document.createElement('a')
+      let link = document.createElement("a");
 
-      link.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(text))
-      link.setAttribute('download', taskList.name + "_todo.txt")
-      link.style.display = 'none'
+      link.setAttribute(
+        "href",
+        "data:text/plain;charset=utf-8," + encodeURIComponent(text)
+      );
+      link.setAttribute("download", taskList.name + "_todo.txt");
+      link.style.display = "none";
 
-      document.body.appendChild(link)
-      link.click()
-      document.body.removeChild(link)
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
     },
 
     goToTaskList: function (idx) {
